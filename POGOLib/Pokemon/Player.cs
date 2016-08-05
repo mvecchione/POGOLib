@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using GeoCoordinatePortable;
+using log4net;
+using POGOLib.Util;
 using POGOProtos.Data;
 using POGOProtos.Data.Player;
 
@@ -8,11 +10,15 @@ namespace POGOLib.Pokemon
 {
     public class Player
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Player));
+        private Random _random;
+
         internal Player(GeoCoordinate coordinate)
         {
             Coordinate = coordinate;
             Inventory = new Inventory();
             Inventory.Update += InventoryOnUpdate;
+            _random = new Random(123);
         }
 
         /// <summary>
@@ -52,6 +58,23 @@ namespace POGOLib.Pokemon
         public void SetCoordinates(double latitude, double longitude, double altitude = 100)
         {
             Coordinate = new GeoCoordinate(latitude, longitude, altitude);
+        }
+
+        public void WalkAround()
+        {
+
+            var oldCordinate = Coordinate;
+           var randomValue = _random.NextDouble();
+            Log.Debug($"RandonValue:{randomValue}");
+           var latMorP = randomValue < .5 ? -1 : 1;
+           var longMorP = randomValue < .5 ? -1 : 1;
+           var newLatitudeValue = ((Math.Floor((randomValue * 13) + 1)) / 100000) * latMorP;
+           var newLongitudeValue = ((Math.Floor((randomValue * 13) + 1)) / 100000) * longMorP;
+            var newLatitude = Latitude + newLatitudeValue;
+            var newLongitude = Longitude + newLongitudeValue;
+            SetCoordinates(newLatitude, newLongitude);
+            var meters =  oldCordinate.GetDistanceTo(Coordinate);
+            Log.Debug($"Walking around.... to lat:{newLatitude}, and long:{newLongitude}...distance walked:{meters}");
         }
 
         /// <summary>

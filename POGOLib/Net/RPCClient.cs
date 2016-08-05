@@ -135,45 +135,21 @@ namespace POGOLib.Net
                         DownloadItemTemplatesResponse.Parser.ParseFrom(itemTemplateResponse));
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+               
                 return false;
             }
 
             return true;
         }
 
-        /// <summary>
-        ///     It is not recommended to call this. Map objects will update automatically and fire the <see cref="Map.Update" />
-        ///     event.
-        /// </summary>
-        public void RefreshMapObjects()
+        public void GetMapObjects(GetMapObjectsMessage message)
         {
-            var cellIds = MapUtil.GetCellIdsForLatLong(_session.Player.Coordinate.Latitude,
-                _session.Player.Coordinate.Longitude);
-            var sinceTimeMs = new List<long>(cellIds.Length);
-
-            for (var i = 0; i < cellIds.Length; i++)
-            {
-                sinceTimeMs.Add(0);
-            }
-
             var response = SendRemoteProcedureCall(new Request
             {
                 RequestType = RequestType.GetMapObjects,
-                RequestMessage = new GetMapObjectsMessage
-                {
-                    CellId =
-                    {
-                        cellIds
-                    },
-                    SinceTimestampMs =
-                    {
-                        sinceTimeMs.ToArray()
-                    },
-                    Latitude = _session.Player.Coordinate.Latitude,
-                    Longitude = _session.Player.Coordinate.Longitude
-                }.ToByteString()
+                RequestMessage = message.ToByteString()
             });
 
             var mapObjects = GetMapObjectsResponse.Parser.ParseFrom(response);
@@ -193,6 +169,37 @@ namespace POGOLib.Net
                 Log.Error($"GetMapObjects status is: '{mapObjects.Status}'.");
             }
         }
+
+        /// <summary>
+        ///     It is not recommended to call this. Map objects will update automatically and fire the <see cref="Map.Update" />
+        ///     event.
+        /// </summary>
+        public void RefreshMapObjects()
+        {
+            var cellIds = MapUtil.GetCellIdsForLatLong(_session.Player.Coordinate.Latitude,
+                _session.Player.Coordinate.Longitude);
+            var sinceTimeMs = new List<long>(cellIds.Length);
+
+            for (var i = 0; i < cellIds.Length; i++)
+            {
+                sinceTimeMs.Add(0);
+            }
+            var requestMessage = new GetMapObjectsMessage
+            {
+                CellId =
+                {
+                    cellIds
+                },
+                SinceTimestampMs =
+                {
+                    sinceTimeMs.ToArray()
+                },
+                Latitude = _session.Player.Coordinate.Latitude,
+                Longitude = _session.Player.Coordinate.Longitude
+            };
+            GetMapObjects(requestMessage);
+        }
+
 
         /// <summary>
         ///     Gets the next <see cref="_requestId" /> for the <see cref="RequestEnvelope" />.

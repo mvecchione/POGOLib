@@ -68,7 +68,8 @@ namespace POGOLib.Pokemon
                 {
                     Dispatch();
                 }
-                Thread.Sleep(1000);
+                Log.Debug("Respiro 30 segundos!");
+                Thread.Sleep(30000);
             }
         }
 
